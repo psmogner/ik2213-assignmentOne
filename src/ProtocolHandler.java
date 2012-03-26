@@ -1,11 +1,20 @@
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
 
 public class ProtocolHandler {
 	
-	String [] get_array;
+	private String [] get_array;
+	private String htmlfile = "";
+	private HTTP_REQ http_request_info;
+	private BufferedReader input;
+	
 	
 
 	public ProtocolHandler(){
-		
+
 	}
 
 	
@@ -37,17 +46,13 @@ home=Cosby&favorite+flavor=flies
 		/* Get Req */
 		if(inputString.startsWith("GET")){
 			get_array = inputString.split(" ");
+			http_request_info = new HTTP_REQ(get_array[0], get_array[1], get_array[2]);
 			
 		}
 		/*Post Req*/ 
 		else if(inputString.startsWith("POST")){
 			
 		}
-		
-		
-		
-		
-		
 		return "";
 	}
 	
@@ -55,6 +60,42 @@ home=Cosby&favorite+flavor=flies
 	/* Handle output */
 	public String outputHandler(){
 		
+		String response = "";
+		
+		if(http_request_info.getMethod_name().equalsIgnoreCase("GET")){
+			/* Send HTML File*/
+			try {
+				input = new BufferedReader(new FileReader("index.html"));
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			/* Read from the buffer */
+			String line;
+			try {
+				while((line = input.readLine()) != null){
+					htmlfile += line + "\r\n";
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			response = "HTTP/1.0 200 OK\r\n";
+			response += "Content-Type: text/html\r\n";
+			response += "Content-Length " + htmlfile.length() + "\r\n";
+			response += "Server: IK2213A1 Server \r\n";
+			response += "Connection: Close \r\n";
+			response += "\r\n";
+			response += htmlfile;
+			
+			return response;
+		}
+	
+		
+//		else if(){
+//			
+//		}
 		
 		
 		
