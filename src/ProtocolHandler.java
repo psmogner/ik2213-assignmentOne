@@ -16,23 +16,23 @@ public class ProtocolHandler {
 		http_request_info = new HttpRequest();
 	}
 	/* Handle input */
-	public boolean StringCompare(String stringOne, String stringTwo){		
-		char[] stringOneCharArray = stringOne.toCharArray();
-		char [] stringTwoCharArray = stringTwo.toCharArray();
-
-		if(stringOneCharArray.length == stringTwoCharArray.length){
-			for(int i = 0; i<stringOneCharArray.length; i++){
-				if(stringOneCharArray[i] != stringTwoCharArray[i]){
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+//	public boolean StringCompare(String stringOne, String stringTwo){		
+//		char[] stringOneCharArray = stringOne.toCharArray();
+//		char [] stringTwoCharArray = stringTwo.toCharArray();
+//
+//		if(stringOneCharArray.length == stringTwoCharArray.length){
+//			for(int i = 0; i<stringOneCharArray.length; i++){
+//				if(stringOneCharArray[i] != stringTwoCharArray[i]){
+//					return false;
+//				}
+//			}
+//		}
+//		return true;
+//	}
 
 
 	public String inputHandler(String inputString){
-		//System.out.println(inputString);
+		System.out.println(inputString);
 		get_array = null;
 	
 		if(inputString.startsWith("GET")){
@@ -52,11 +52,11 @@ public class ProtocolHandler {
 		}else if(inputString.startsWith("from=")){
 			String[] message = inputString.split("&");
 		
-			System.out.println(message[0].split("=")[1]);
-			System.out.println(message[1].split("=")[1]);
-			System.out.println(message[2].split("=")[1]);
-			System.out.println(message[3].split("=")[1]);
-			System.out.println(message[4].split("=")[1]);
+//			System.out.println(message[0].split("=")[1]);
+//			System.out.println(message[1].split("=")[1]);
+//			System.out.println(message[2].split("=")[1]);
+//			System.out.println(message[3].split("=")[1]);
+//			System.out.println(message[4].split("=")[1]);
 			
 			http_request_info.setFrom(message[0].split("=")[1]);
 			http_request_info.setTo(message[1].split("=")[1]);
@@ -71,12 +71,9 @@ public class ProtocolHandler {
 	public String outputHandler(){
 		String response = "";
 		htmlfile = "";
-		//System.out.println("Test" + http_request_info.getMethod_name());
-		//		if(http_request_info.getMethod_name() == null){
-		//			System.out.println("Den ar null");
-		//		}
-		//		http_request_info.setMethod_name("GET");
-		if(StringCompare(http_request_info.getMethod_name(), "GET")){
+		System.out.println("MethodName is: "+http_request_info.getMethod_name());
+	
+		if(http_request_info.getMethod_name().equals("GET")){
 			/* Send HTML File*/
 			System.out.println("EQUALS GET");
 
@@ -97,7 +94,7 @@ public class ProtocolHandler {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}else if(StringCompare(http_request_info.getMethod_name(), "POST")){
+		}else if(http_request_info.getMethod_name().equals("POST")){
 			System.out.println("EQUALS POST");
 		}
 		response = "HTTP/1.0 200 OK\r\n";
