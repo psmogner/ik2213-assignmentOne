@@ -4,13 +4,7 @@ import java.net.Socket;
 public class serverHandler extends Thread {
 	//Initialize necessary variables, arrays, strings etc.
 	private Socket clientSocket;
-	boolean running = false;
-	boolean correctGuess = false;
-	int nrOfGuessesLeft = 3;
-	int lengthOfIncomingWord = 0;
-	String convertStandings, convertAttempts;
-	char [] guessFromClientInToStringCheck;
-
+	
 	public serverHandler(Socket clientSocket) {
 		this.clientSocket = clientSocket;
 	}
