@@ -25,7 +25,7 @@ public class ProtocolHandler {
 		/* Get Req */
 		if(inputString.startsWith("GET")){
 			
-			System.out.println("inputHandler I get metoden");
+			System.out.println("inputHandler I get metoden \n");
 			get_array = inputString.split(" ");
 			http_request_info = new HttpRequest(get_array[0], get_array[1], get_array[2]);
 
@@ -43,7 +43,9 @@ public class ProtocolHandler {
 
 		String response = "";
 		//System.out.println("Test" + http_request_info.getMethod_name());
-		if(http_request_info.getMethod_name().equalsIgnoreCase("GET") == true){
+		//if(http_request_info.getMethod_name().equalsIgnoreCase("GET") == true){
+		
+		if(true){
 			/* Send HTML File*/
 			
 			System.out.println(" I outputHandler EQUALS get");
@@ -73,9 +75,8 @@ public class ProtocolHandler {
 			response += "Connection: Close \r\n";
 			response += "\r\n";
 			response += htmlfile;
-
-
-			response = "hej";
+			
+			System.out.println(response);
 			return response;
 		}
 

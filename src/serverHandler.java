@@ -15,12 +15,12 @@ public class serverHandler extends Thread {
 		//Status messages from the server.
 		System.out.println("Connection established.");
 		BufferedReader in = null;
-		BufferedOutputStream out = null;
+		PrintWriter out = null;
 		char[] incomingData = new char[5000];
 		//Creating the in- and output stream.
 		try {
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-			out = new BufferedOutputStream(clientSocket.getOutputStream());
+			out = new PrintWriter(clientSocket.getOutputStream());
 			ProtocolHandler newHandler = new ProtocolHandler();
 			int numberOfCharsInData=0, lengthOfData;
 			String inputOfData="";
@@ -35,6 +35,9 @@ public class serverHandler extends Thread {
 				newHandler.inputHandler(linesRead);
 			}
 			outputOfData = newHandler.outputHandler();
+			
+			out.print(outputOfData);
+			
 			
 		} catch (IOException e) {
 			System.out.println(e.toString());
