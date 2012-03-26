@@ -32,7 +32,8 @@ public class ProtocolHandler {
 
 
 	public String inputHandler(String inputString){
-		System.out.println(inputString);
+		//System.out.println(inputString);
+		get_array = null;
 	
 		if(inputString.startsWith("GET")){
 			System.out.println("IS A GET");
@@ -47,29 +48,33 @@ public class ProtocolHandler {
 			http_request_info.setMethod_name(get_array[0]);
 			http_request_info.setLocal_path(get_array[1]);
 			http_request_info.setProtocol_version(get_array[2]);
+			
 		}else if(inputString.startsWith("from=")){
 			String[] message = inputString.split("&");
-			http_request_info.setFrom(message[0]);
-			http_request_info.setTo(message[1]);
-			http_request_info.setSubject(message[2]);
-			http_request_info.setSMTP(message[3]);
-			http_request_info.setMessage(message[4]);
+		
+			System.out.println(message[0].split("=")[1]);
+			System.out.println(message[1].split("=")[1]);
+			System.out.println(message[2].split("=")[1]);
+			System.out.println(message[3].split("=")[1]);
+			System.out.println(message[4].split("=")[1]);
+			
+			http_request_info.setFrom(message[0].split("=")[1]);
+			http_request_info.setTo(message[1].split("=")[1]);
+			http_request_info.setSubject(message[2].split("=")[1]);
+			http_request_info.setSMTP(message[3].split("=")[1]);
+			http_request_info.setMessage(message[4].split("=")[1]);
 		}
 		return "";
 	}
 
-
 	/* Handle output */
 	public String outputHandler(){
-
 		String response = "";
 		htmlfile = "";
 		//System.out.println("Test" + http_request_info.getMethod_name());
 		//		if(http_request_info.getMethod_name() == null){
 		//			System.out.println("Den ar null");
 		//		}
-
-
 		//		http_request_info.setMethod_name("GET");
 		if(StringCompare(http_request_info.getMethod_name(), "GET")){
 			/* Send HTML File*/
@@ -92,11 +97,7 @@ public class ProtocolHandler {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		//}else if(StringCompare(http_request_info.getMethod_name(), "POST")){
-		//}else if(http_request_info.getMethod_name().equalsIgnoreCase("POST") == true && http_request_info.getLocal_path().equalsIgnoreCase("/submitmail") == true){
-		}else if(http_request_info.getMethod_name().compareTo(thisCase)==1){
-			
-		
+		}else if(StringCompare(http_request_info.getMethod_name(), "POST")){
 			System.out.println("EQUALS POST");
 		}
 		response = "HTTP/1.0 200 OK\r\n";
