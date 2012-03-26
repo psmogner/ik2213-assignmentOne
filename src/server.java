@@ -10,9 +10,9 @@ public class server {
 		
 		try {
 			//Creating a socket that listens to a specific port
-			serverSocket = new ServerSocket(4444);
+			serverSocket = new ServerSocket(8000);
 		} catch (IOException e) {
-			System.err.println("Could not listen on port: 4444.");
+			System.err.println("Could not listen on port: 80.");
 			System.exit(1);
 		}
 
@@ -22,7 +22,7 @@ public class server {
 			Socket clientSocket = serverSocket.accept();
 			//Accepting the socket connection and
 			//create a new Thread in serverHandler
-			(new serverHandler(clientSocket)).start();
+			(new serverHandler(clientSocket)).start(); 
 		}
 		serverSocket.close();
 	}
