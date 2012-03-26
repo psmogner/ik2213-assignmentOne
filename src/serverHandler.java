@@ -5,6 +5,7 @@ import java.net.Socket;
 public class serverHandler extends Thread {
 	//Initialize necessary variables, arrays, strings etc.
 	private Socket clientSocket;
+	private ProtocolHandler newHandler;
 	
 	public serverHandler(Socket clientSocket) {
 		this.clientSocket = clientSocket;
@@ -18,10 +19,11 @@ public class serverHandler extends Thread {
 		PrintWriter out = null;
 		char[] incomingData = new char[5000];
 		//Creating the in- and output stream.
+		newHandler = new ProtocolHandler();
 		try {
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			out = new PrintWriter(clientSocket.getOutputStream());
-			ProtocolHandler newHandler = new ProtocolHandler();
+			
 			int numberOfCharsInData=0, lengthOfData;
 			String inputOfData="";
 			String outputOfData, linesRead;
@@ -30,6 +32,7 @@ public class serverHandler extends Thread {
 				inputOfData = inputOfData + String.valueOf(incomingData, 0, numberOfCharsInData);
 			}
 			lengthOfData = inputOfData.split("\n").length;
+			System.out.println(" Length of data : " + lengthOfData);
 			for(int i=0; i<lengthOfData; i++){
 				linesRead = inputOfData.split("\n")[i];
 				newHandler.inputHandler(linesRead);
