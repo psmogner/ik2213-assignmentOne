@@ -18,12 +18,10 @@ public class serverHandler extends Thread {
 		BufferedReader in = null;
 		PrintWriter out = null;
 		char[] incomingData = new char[5000];
-		//Creating the in- and output stream.
 		newHandler = new ProtocolHandler();
 		try {
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			out = new PrintWriter(clientSocket.getOutputStream());
-			
 			int numberOfCharsInData=0, lengthOfData;
 			String inputOfData="";
 			String outputOfData, linesRead;
@@ -44,7 +42,6 @@ public class serverHandler extends Thread {
 			System.out.println(e.toString());
 			return;
 		}	
-
 		
 		//Closing the socket
 		try {
@@ -55,5 +52,4 @@ public class serverHandler extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
 }
