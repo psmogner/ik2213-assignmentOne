@@ -5,20 +5,17 @@ import java.io.IOException;
 
 
 public class ProtocolHandler {
-
 	private String [] get_array;
 	private String htmlfile = "";
 	private HttpRequest http_request_info;
 	private BufferedReader input;
-
+	private String thisCase;
+	
 
 	public ProtocolHandler(){
 		http_request_info = new HttpRequest();
 	}
-
-
 	/* Handle input */
-
 	public boolean StringCompare(String stringOne, String stringTwo){		
 		char[] stringOneCharArray = stringOne.toCharArray();
 		char [] stringTwoCharArray = stringTwo.toCharArray();
@@ -35,33 +32,28 @@ public class ProtocolHandler {
 
 
 	public String inputHandler(String inputString){
-		
-		
-		System.out.println("INPUT: " + inputString);
-
-
-		/* Get Req */
+		System.out.println(inputString);
+	
 		if(inputString.startsWith("GET")){
-
-			System.out.println("inputHandler I get metoden \n");
+			System.out.println("IS A GET");
 			get_array = inputString.split(" ");
-			System.out.println(get_array[0] + " 1: " + get_array[1] + " 2: " + get_array[2]);
-
 			http_request_info.setMethod_name(get_array[0]);
 			http_request_info.setLocal_path(get_array[1]);
 			http_request_info.setProtocol_version(get_array[2]);
-
 		}
-		/*Post Req*/ 
 		else if(inputString.startsWith("POST")){
-			System.out.println("inputHandler I post metoden ");
-
+			System.out.println("IS A POST");
 			get_array = inputString.split(" ");
-			System.out.println(get_array[0] + " 1: " + get_array[1] + " 2: " + get_array[2]);
-
 			http_request_info.setMethod_name(get_array[0]);
 			http_request_info.setLocal_path(get_array[1]);
 			http_request_info.setProtocol_version(get_array[2]);
+		}else if(inputString.startsWith("from=")){
+			String[] message = inputString.split("&");
+			http_request_info.setFrom(message[0]);
+			http_request_info.setTo(message[1]);
+			http_request_info.setSubject(message[2]);
+			http_request_info.setSMTP(message[3]);
+			http_request_info.setMessage(message[4]);
 		}
 		return "";
 	}
@@ -80,16 +72,13 @@ public class ProtocolHandler {
 
 		//		http_request_info.setMethod_name("GET");
 		if(StringCompare(http_request_info.getMethod_name(), "GET")){
-
 			/* Send HTML File*/
-
-			System.out.println(" I outputHandler EQUALS get");
+			System.out.println("EQUALS GET");
 
 			try {
 				input = new BufferedReader(new FileReader("index.html"));
-				System.out.println("Filen is read");
+				System.out.println("<------------------------------------->");
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 
@@ -103,14 +92,13 @@ public class ProtocolHandler {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		//}else if(StringCompare(http_request_info.getMethod_name(), "POST")){
+		//}else if(http_request_info.getMethod_name().equalsIgnoreCase("POST") == true && http_request_info.getLocal_path().equalsIgnoreCase("/submitmail") == true){
+		}else if(http_request_info.getMethod_name().compareTo(thisCase)==1){
+			
+		
+			System.out.println("EQUALS POST");
 		}
-		else if(http_request_info.getMethod_name().equalsIgnoreCase("POST") == true && http_request_info.getLocal_path().equalsIgnoreCase("/submitmail") == true){
-			System.out.println("I post output");
-
-		}
-
-
-
 		response = "HTTP/1.0 200 OK\r\n";
 		response += "Content-Type: text/html\r\n";
 		response += "Content-Length " + htmlfile.length() + "\r\n";
@@ -119,19 +107,8 @@ public class ProtocolHandler {
 		response += "\r\n";
 		response += htmlfile;
 
-		System.out.println(response);
+//		System.out.println(response);
 		return response;
-
-
-
-		//		else if(){
-		//			
-		//		}
-
-
-
-
-
 	}	
 }
 

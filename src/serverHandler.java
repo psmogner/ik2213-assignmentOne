@@ -31,14 +31,12 @@ public class serverHandler extends Thread {
 				numberOfCharsInData = in.read(incomingData, 0, 5000);
 				inputOfData = inputOfData + String.valueOf(incomingData, 0, numberOfCharsInData);
 			}
-			lengthOfData = inputOfData.split("\n").length;
-			System.out.println(" Length of data : " + lengthOfData);
+			lengthOfData = inputOfData.split("\r\n|\r|\n").length;
 			for(int i=0; i<lengthOfData; i++){
-				linesRead = inputOfData.split("\n")[i];
+				linesRead = inputOfData.split("\r\n|\r|\n")[i];
 				newHandler.inputHandler(linesRead);
 			}
 			outputOfData = newHandler.outputHandler();
-			
 			out.print(outputOfData);
 			
 			
