@@ -12,7 +12,6 @@ public class ProtocolHandler {
 	private BufferedReader input;
 
 
-
 	public ProtocolHandler(){
 
 	}
@@ -43,9 +42,17 @@ public class ProtocolHandler {
 
 		String response = "";
 		//System.out.println("Test" + http_request_info.getMethod_name());
-		//if(http_request_info.getMethod_name().equalsIgnoreCase("GET") == true){
+		if(http_request_info.getMethod_name() == null){
+			System.out.println("Den ar null");
+		}
 		
-		if(true){
+		
+			
+	
+		
+		//if(http_request_info.getMethod_name().equalsIgnoreCase("GET") == true){
+		if(http_request_info.getMethod_name().equals(new String("GET"))){
+
 			/* Send HTML File*/
 			
 			System.out.println(" I outputHandler EQUALS get");
