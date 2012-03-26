@@ -1,6 +1,7 @@
 import java.io.*;
 import java.net.Socket;
 
+// Taken from homework 1 in ID2212
 public class serverHandler extends Thread {
 	//Initialize necessary variables, arrays, strings etc.
 	private Socket clientSocket;
@@ -13,13 +14,28 @@ public class serverHandler extends Thread {
 	public void run(){
 		//Status messages from the server.
 		System.out.println("Connection established.");
-		BufferedReader in;
-		BufferedOutputStream out;
-
+		BufferedReader in = null;
+		BufferedOutputStream out = null;
+		char[] incomingData = new char[5000];
 		//Creating the in- and output stream.
 		try {
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			out = new BufferedOutputStream(clientSocket.getOutputStream());
+			ProtocolHandler newHandler = new ProtocolHandler();
+			int numberOfCharsInData=0, lengthOfData;
+			String inputOfData="";
+			String outputOfData, linesRead;
+			while(in.ready() != false){
+				numberOfCharsInData = in.read(incomingData, 0, 5000);
+				inputOfData = inputOfData + String.valueOf(incomingData, 0, numberOfCharsInData);
+			}
+			lengthOfData = inputOfData.split("\n").length;
+			for(int i=0; i<lengthOfData; i++){
+				linesRead = inputOfData.split("\n")[i];
+				newHandler.inputHandler(linesRead);
+			}
+			outputOfData = newHandler.outputHandler();
+			
 		} catch (IOException e) {
 			System.out.println(e.toString());
 			return;
