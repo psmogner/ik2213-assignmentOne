@@ -6,7 +6,7 @@ public class serverHandler extends Thread {
 	//Initialize necessary variables, arrays, strings etc.
 	private Socket clientSocket;
 	private ProtocolHandler newHandler;
-	
+
 	public serverHandler(Socket clientSocket) {
 		this.clientSocket = clientSocket;
 	}
@@ -30,19 +30,23 @@ public class serverHandler extends Thread {
 				inputOfData = inputOfData + String.valueOf(incomingData, 0, numberOfCharsInData);
 			}
 			lengthOfData = inputOfData.split("\r\n|\r|\n").length;
-			for(int i=0; i<lengthOfData; i++){
-				linesRead = inputOfData.split("\r\n|\r|\n")[i];
-				newHandler.inputHandler(linesRead);
+
+			if(inputOfData != null && (inputOfData.startsWith("GET") == true || inputOfData.startsWith("POST") == true)){
+				for(int i=0; i<lengthOfData; i++){
+					linesRead = inputOfData.split("\r\n|\r|\n")[i];
+					newHandler.inputHandler(linesRead);
+				}
+				outputOfData = newHandler.outputHandler();
+				out.print(outputOfData);
+			}else{
+				System.out.println("<NO DATA TO READ!");
 			}
-			outputOfData = newHandler.outputHandler();
-			out.print(outputOfData);
-			
-			
+
 		} catch (IOException e) {
 			System.out.println(e.toString());
 			return;
 		}	
-		
+
 		//Closing the socket
 		try {
 			out.close();
