@@ -1,8 +1,13 @@
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.Socket;
 import java.net.URLDecoder;
 
 public class ProtocolHandler {
@@ -15,6 +20,10 @@ public class ProtocolHandler {
 	private String subject = null;
 	private String smtp = null;
 	private String text = null;
+	private Socket smtpsocket;
+	private BufferedReader is;
+	private BufferedOutputStream os;
+	private String ipAddress = "192.168.3.12";
 
 	public ProtocolHandler(){
 		http_request_info = new HttpRequest();
@@ -57,13 +66,14 @@ public class ProtocolHandler {
 				http_request_info.setSubject(subject);
 				http_request_info.setSMTP(smtp);
 				http_request_info.setText(text);
-				
+
 			}
 		}
 		return "";
 	}
 
 	/* Handle output */
+	@SuppressWarnings("deprecation")
 	public String outputHandler(){
 		String response = "";
 		String SMTPresponse = "";
@@ -83,10 +93,7 @@ public class ProtocolHandler {
 
 		}else if(http_request_info.getMethod_name().equals("POST")){
 			System.out.println("OUTPUTHANDLER EQUALS POST");
-			//ESTABLISH/SETUP CONNECTION TO THE SMTP SERVER HERE... I GUESS?
-			
-			
-			
+
 			//MESSAGE TO THE SMTP SERVER
 			SMTPresponse = "HELO "+http_request_info.getSMTP()+"\r\n";
 			SMTPresponse += "MAIL FROM: <"+http_request_info.getFrom()+">\r\n";
@@ -95,6 +102,45 @@ public class ProtocolHandler {
 			SMTPresponse += "Subject: "+http_request_info.getText();
 			SMTPresponse += "\r\n.\r\n";
 			SMTPresponse += "QUIT\r\n";
+
+			//ESTABLISH/SETUP CONNECTION TO THE SMTP SERVER HERE... I GUESS?
+			/* Socket, Outputstream % InputStream*/
+			smtpsocket = null;
+			os = null;
+			is = null;
+
+
+			try {
+				smtpsocket = new Socket(ipAddress, 25);
+				os = new BufferedOutputStream(smtpsocket.getOutputStream());
+				is = new BufferedReader(new InputStreamReader(smtpsocket.getInputStream()));
+
+				if(smtpsocket != null && os != null && is != null){ 
+					os.write(SMTPresponse.getBytes());					
+				}			
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			// Now send the email off and check the server reply.  
+			// Was an OK is reached you are complete.
+			String responseline;
+			try {
+				while((responseline = is.readLine())!=null)
+				{  // System.out.println(responseline);
+					if(responseline.indexOf("Ok") != -1)
+						break;
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+
+
+
+
+
 		}
 
 		response = "HTTP/1.0 200 OK\r\n";
@@ -116,10 +162,10 @@ public class ProtocolHandler {
 	}
 	public Boolean validateEmail(String emailForValidation){
 		boolean valid = false;
-	
+
 		if(emailForValidation.contains("@") == true){
 			String[] result = emailForValidation.split("@");
-			
+
 			if(result[0] == null || result[1] == null){
 				System.out.println("<INVALID EMAIL "+ emailForValidation);
 				return false;
