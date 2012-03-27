@@ -11,7 +11,7 @@ public class server {
 		try {
 			serverSocket = new ServerSocket(8000);
 		} catch (IOException e) {
-			System.err.println("Could not listen on port: 80.");
+			System.err.println("Could not listen on port: 8000.");
 			System.exit(1);
 		}
 
