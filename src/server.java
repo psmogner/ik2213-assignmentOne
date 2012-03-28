@@ -15,6 +15,7 @@ public class server {
 			System.exit(1);
 		}
 
+		
 		while(listening) {
 			Socket clientSocket = serverSocket.accept();
 			(new serverHandler(clientSocket)).start(); 

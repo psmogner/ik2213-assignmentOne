@@ -8,6 +8,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.URLDecoder;
 import javax.naming.NamingException;
+import java.lang.Object;
+
 
 public class ProtocolHandler {
 	private String [] get_array;
@@ -33,6 +35,8 @@ public class ProtocolHandler {
 	public String inputHandler(String inputString){
 		System.out.println("Input string inputhandler rad32: " + inputString);
 		
+		
+		/**/
 		
 //		if(temp == true){
 //			System.out.println(http_request_info.getMethod_name());			
@@ -111,6 +115,10 @@ public class ProtocolHandler {
 			//ESTABLISH/SETUP CONNECTION TO THE SMTP SERVER HERE... I GUESS?
 			
 			//MESSAGE TO THE SMTP SERVER
+			
+
+			
+//			Lookup l = new Lookup("");
 			
 			String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
 			String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			

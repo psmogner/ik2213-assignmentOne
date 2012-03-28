@@ -13,6 +13,8 @@ public class serverHandler extends Thread {
 
 	//What the newly created thread is going to do 
 	public void run(){
+		
+		
 		//Status messages from the server.
 		System.out.println("Connection established.");
 		BufferedReader in = null;
