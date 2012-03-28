@@ -23,13 +23,21 @@ public class ProtocolHandler {
 	private BufferedReader is;
 	private BufferedOutputStream os;
 	private String ipAddress = "192.168.3.11";
+	
+	boolean temp = false;
 
 	public ProtocolHandler(){
 		http_request_info = new HttpRequest();
 	}
 
 	public String inputHandler(String inputString){
-		System.out.println(inputString);
+		System.out.println("Input string inputhandler rad32: " + inputString);
+		
+		
+//		if(temp == true){
+//			System.out.println(http_request_info.getMethod_name());			
+//		}
+		
 		if(inputString != null){
 			if(inputString.startsWith("GET")){
 				System.out.println("IS A GET");
@@ -37,6 +45,7 @@ public class ProtocolHandler {
 				http_request_info.setMethod_name(get_array[0]);
 				http_request_info.setLocal_path(get_array[1]);
 				http_request_info.setProtocol_version(get_array[2]);
+				temp = true;
 
 			}else if(inputString.startsWith("POST")){
 				System.out.println("IS A POST");
@@ -62,11 +71,11 @@ public class ProtocolHandler {
 				if(validateEmail(from) == false || validateEmail(to) == false){
 					return "";
 				}
-				//TAKING KTH.SE FROM SOMEONE@KTH.SE AND SEND IT TO METHOD FOR FINDING THE DNS.
-				try {
-					findSMTPServer(message[1].split("@")[1]);
-				} catch (NamingException e) {e.printStackTrace();}
-				
+//				//TAKING KTH.SE FROM SOMEONE@KTH.SE AND SEND IT TO METHOD FOR FINDING THE DNS.
+//				try {
+//					findSMTPServer(message[1].split("@")[1]);
+//				} catch (NamingException e) {e.printStackTrace();}
+//				
 				http_request_info.setMailFrom(from);
 				http_request_info.setMailTo(to);
 				http_request_info.setMailSubject(subject);
@@ -103,21 +112,23 @@ public class ProtocolHandler {
 			
 			//MESSAGE TO THE SMTP SERVER
 			
-//			String hello = "HELO "+http_request_info.getSMTP()+"\r\n";
-//			String mail_from = "MAIL FROM: <"+http_request_info.getFrom()+">\r\n";			
-//			String rcpt_to = "RCPT TO: <" + http_request_info.getTo()+">\r\n";
-//			String data = "DATA\r\n";
-//			String subject = "Subject: "+ http_request_info.getSubject()+"\r\n";
-//			String new_lines = ".\r\n";
-//			String quit = "QUIT\r\n";
-			
-			String hello = "HELO mail.ik2213.lab"+"\r\n";
-			String mail_from = "MAIL FROM: <nkj89@hotmail.com"+">\r\n";
-			String rcpt_to = "RCPT TO: <njohnson@mail.ik2213.lab"+">\r\n";
+			String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
+			String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
+			String rcpt_to = "RCPT TO: <" + http_request_info.getMailTo()+">\r\n";
 			String data = "DATA\r\n";
-			String subject = "Subject: Mailtestet\r\n";
+			String subject = "Subject: "+ http_request_info.getMailSubject()+"\r\n";
+			String mail_text = http_request_info.getMailText() + "\r\n";
+			String blank_line = "\r\n";
 			String new_lines = ".\r\n";
 			String quit = "QUIT\r\n";
+			
+//			String hello = "HELO mail.ik2213.lab"+"\r\n";
+//			String mail_from = "MAIL FROM: <nkj89@hotmail.com"+">\r\n";
+//			String rcpt_to = "RCPT TO: <njohnson@mail.ik2213.lab"+">\r\n";
+//			String data = "DATA\r\n";
+//			String subject = "Subject: Mailtestet\r\n";
+//			String new_lines = ".\r\n";
+//			String quit = "QUIT\r\n";
 			
 			System.out.println(SMTPresponse);
 			//ESTABLISH/SETUP CONNECTION TO THE SMTP SERVER HERE... I GUESS?
@@ -140,8 +151,7 @@ public class ProtocolHandler {
 					sendAndGetResponse(mail_from);
 					sendAndGetResponse(rcpt_to);
 					sendAndGetResponse(data);
-					sendAndGetResponse(subject);
-					sendAndGetResponse(new_lines);
+					sendAndGetResponse(subject + blank_line + mail_text + new_lines);
 					sendAndGetResponse(quit);						
 				}			
 			} catch (IOException e) {
@@ -229,11 +239,14 @@ public class ProtocolHandler {
 	}
 	public void sendAndGetResponse(String statement){
 		try {
+			System.out.println("sendAndGetResponse: " + statement);
 			os.write(statement.getBytes());
 			os.flush();
 		} catch (IOException e) {e.printStackTrace();}
+		
+		
 		try {
-			System.out.println(is.readLine());
+			System.out.println("readline: " + is.readLine());
 		} catch (IOException e) {e.printStackTrace();}
 		
 		/* L€GG IN ERROR HANTERING OM EJ OK */
