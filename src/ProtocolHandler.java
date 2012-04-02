@@ -7,9 +7,14 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.URLDecoder;
-import javax.naming.NamingException;
-import java.lang.Object;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
 
 public class ProtocolHandler {
 	private String [] get_array;
@@ -25,7 +30,7 @@ public class ProtocolHandler {
 	private BufferedReader is;
 	private BufferedOutputStream os;
 	private String ipAddress = "192.168.3.11";
-	
+
 	boolean temp = false;
 
 	public ProtocolHandler(){
@@ -33,15 +38,7 @@ public class ProtocolHandler {
 	}
 
 	public String inputHandler(String inputString){
-		System.out.println("Input string inputhandler rad32: " + inputString);
-		
-		
-		/**/
-		
-//		if(temp == true){
-//			System.out.println(http_request_info.getMethod_name());			
-//		}
-		
+
 		if(inputString != null){
 			if(inputString.startsWith("GET")){
 				System.out.println("IS A GET");
@@ -70,16 +67,16 @@ public class ProtocolHandler {
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
 				}
-				
+
 				//CHECKS IF THE EMAILS ARE VALID
 				if(validateEmail(from) == false || validateEmail(to) == false){
 					return "";
 				}
-//				//TAKING KTH.SE FROM SOMEONE@KTH.SE AND SEND IT TO METHOD FOR FINDING THE DNS.
-//				try {
-//					findSMTPServer(message[1].split("@")[1]);
-//				} catch (NamingException e) {e.printStackTrace();}
-//				
+				//--------------------------------------------------------------------------------
+				//				try {
+				//					MXlookup(to.split("@")[1]);
+				//				} catch (NamingException e) {e.printStackTrace();}
+				//--------------------------------------------------------------------------------
 				http_request_info.setMailFrom(from);
 				http_request_info.setMailTo(to);
 				http_request_info.setMailSubject(subject);
@@ -87,7 +84,7 @@ public class ProtocolHandler {
 				http_request_info.setMailText(text);
 			}
 		}else{
-		//SOMETHING?!?	
+			//SOMETHING?!?	
 		}
 		return "";
 	}
@@ -113,13 +110,9 @@ public class ProtocolHandler {
 		}else if(http_request_info.getMethod_name().equals("POST")){
 			System.out.println("OUTPUTHANDLER EQUALS POST");
 			//ESTABLISH/SETUP CONNECTION TO THE SMTP SERVER HERE... I GUESS?
-			
-			//MESSAGE TO THE SMTP SERVER
-			
 
-			
-//			Lookup l = new Lookup("");
-			
+			//MESSAGE TO THE SMTP SERVER
+
 			String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
 			String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
 			String rcpt_to = "RCPT TO: <" + http_request_info.getMailTo()+">\r\n";
@@ -129,22 +122,13 @@ public class ProtocolHandler {
 			String blank_line = "\r\n";
 			String new_lines = ".\r\n";
 			String quit = "QUIT\r\n";
-			
-//			String hello = "HELO mail.ik2213.lab"+"\r\n";
-//			String mail_from = "MAIL FROM: <nkj89@hotmail.com"+">\r\n";
-//			String rcpt_to = "RCPT TO: <njohnson@mail.ik2213.lab"+">\r\n";
-//			String data = "DATA\r\n";
-//			String subject = "Subject: Mailtestet\r\n";
-//			String new_lines = ".\r\n";
-//			String quit = "QUIT\r\n";
-			
 			System.out.println(SMTPresponse);
+
 			//ESTABLISH/SETUP CONNECTION TO THE SMTP SERVER HERE... I GUESS?
 			/* Socket, Outputstream % InputStream*/
 			smtpsocket = null;
 			os = null;
 			is = null;
-
 
 			try {
 				smtpsocket = new Socket(ipAddress, 25);
@@ -154,7 +138,7 @@ public class ProtocolHandler {
 
 				if(smtpsocket != null && os != null && is != null){
 					System.out.println("I ifsatsen");
-					
+
 					sendAndGetResponse(hello);
 					sendAndGetResponse(mail_from);
 					sendAndGetResponse(rcpt_to);
@@ -170,12 +154,11 @@ public class ProtocolHandler {
 			// Was an OK is reached you are complete.
 			String responseline;
 			try {
-	
-				while((responseline = is.readLine())!=null)
-				{  // System.out.println(responseline);
+
+				while((responseline = is.readLine())!=null) {  
 					System.out.println(responseline);
-//					if(responseline.indexOf("Ok") != -1)
-//						break;
+					//					if(responseline.indexOf("Ok") != -1)
+					//						break;
 				}
 			} catch (IOException e) {e.printStackTrace();}
 
@@ -184,8 +167,7 @@ public class ProtocolHandler {
 			} catch (IOException e) {
 				System.out.println("Failed to close socket");
 				e.printStackTrace();
-			}
-			
+			}	
 		}
 
 		response = "HTTP/1.0 200 OK\r\n";
@@ -201,37 +183,63 @@ public class ProtocolHandler {
 
 	public String theDecoderWithSwe(String input) throws UnsupportedEncodingException{
 		System.out.println("<BEFORE: " + input);
-		
+
 		if(input.contains("%E4")==true) {
-			input = input.replace("%E4", "Š");
+			input = input.replace("%E4", "=E4");
 		}
 		if(input.contains("%E5") == true){
-			input = input.replace("%E5", "Œ");			
+			input = input.replace("%E5", "=E5");			
 		}
 		if(input.contains("%F6") == true){
-			input = input.replace("%F6", "š");
+			input = input.replace("%F6", "=F6");
 		}
 		if(input.contains("%C4")==true) {
-			input = input.replace("%C4", "€");
+			input = input.replace("%C4", "=C4");
 		}
 		if(input.contains("%C5") == true){
-			input = input.replace("%C5", "");			
+			input = input.replace("%C5", "=C5");			
 		}
 		if(input.contains("%D6") == true){
-			input = input.replace("%D6", "…");
+			input = input.replace("%D6", "=D6");
 		}
-		
-		String result = URLDecoder.decode(input, "UTF-8");
+
+		String result = URLDecoder.decode(input, "ASCII");
 		System.out.println("<AFTER: " +result);
 		return result;
 	}
-	
+
+	private ArrayList<?> MXlookup(String potentialDNS) throws NamingException{
+		String DNSserver = "";
+		Hashtable<String, String> hashtable = new Hashtable<String, String>();
+		hashtable.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
+		DirContext dircontext = new InitialDirContext(hashtable);
+		Attributes attributes = dircontext.getAttributes(potentialDNS, new String[] {"MX"});
+		if( attributes == null) {
+			throw new NamingException
+			( "No match for name " + potentialDNS );
+		}else{
+			//...... Mer mer mer Œ mer!
+			NamingEnumeration en = attributes.getAll();
+			while(en.hasMore() != false){
+				String test = (String) en.next();
+				System.out.println("Vad Šr det?!?! =>"+ en.next());
+				String[] f = test.split(" ");
+				if(f[1].endsWith(".")){
+					f[1].substring(0, f[1].length()-1);
+				} else {
+					res
+				}
+			}
+		}
+		return null;
+	}
+
 	public Boolean validateEmail(String emailForValidation){
 		boolean valid = false;
-	
+
 		if(emailForValidation.contains("@") == true){
 			String[] result = emailForValidation.split("@");
-			
+
 			if(result[0] == null || result[1] == null){
 				System.out.println("<INVALID EMAIL "+ emailForValidation);
 				return false;
@@ -251,15 +259,10 @@ public class ProtocolHandler {
 			os.write(statement.getBytes());
 			os.flush();
 		} catch (IOException e) {e.printStackTrace();}
-		
-		
 		try {
 			System.out.println("readline: " + is.readLine());
 		} catch (IOException e) {e.printStackTrace();}
-		
-		/* L€GG IN ERROR HANTERING OM EJ OK */
-	}
-	public String findSMTPServer(String email) throws NamingException{
-		return email;
+
+		// L€GG IN ERROR HANTERING OM EJ OK
 	}
 }

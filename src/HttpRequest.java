@@ -12,8 +12,6 @@ public class HttpRequest {
 	public HttpRequest(){
 		
 	}
-	
-	
 
 	public String getMethod_name() {
 		return method_name;
