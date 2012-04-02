@@ -67,11 +67,6 @@ public class ProtocolHandler {
 					e.printStackTrace();
 				}
 
-				//CHECKS IF THE EMAILS ARE VALID
-				if(validateEmail(from) == false || validateEmail(to) == false){
-					reLoadHTML("Invalid mail address!");
-					return "";
-				}
 //				String potentialDNS = to.split("@")[1];
 //				System.out.println("Vad som skickas in: "+ to.split("@")[1]);
 //				MXlookup(to.split("@")[1]);
@@ -103,8 +98,13 @@ public class ProtocolHandler {
 			System.out.println("OUTPUTHANDLER EQUALS POST");
 			//ESTABLISH/SETUP CONNECTION TO THE SMTP SERVER HERE... I GUESS?
 
+			//CHECKS IF THE EMAILS ARE VALID
+			if(validateEmail(http_request_info.getMailFrom()) == false || validateEmail(http_request_info.getMailTo()) == false){
+				reLoadHTML("Invalid mail address.");
+				return "";
+			}
+			
 			//MESSAGE TO THE SMTP SERVER
-
 			String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
 			String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
 			String rcpt_to = "RCPT TO: <" + http_request_info.getMailTo()+">\r\n";
@@ -154,9 +154,8 @@ public class ProtocolHandler {
 					//	if(responseline.indexOf("Ok") != -1)
 					//	break;
 				}
-				reLoadHTML("Mail successfully sent! :D");
+				//reLoadHTML("Mail successfully sent! :D");
 			} catch (IOException e) {e.printStackTrace();}
-
 			try {
 				smtpsocket.close();
 			} catch (IOException e) {
@@ -166,7 +165,6 @@ public class ProtocolHandler {
 			}	
 		}
 		
-
 		response = "HTTP/1.0 200 OK\r\n";
 		response += "Content-Type: text/html\r\n";
 		response += "Content-Length " + htmlfile.length() + "\r\n";
@@ -176,7 +174,6 @@ public class ProtocolHandler {
 		response += htmlfile;
 		return response;
 	}	
-	
 	//================================================================================
 	public String theDecoderWithSwe(String input) throws UnsupportedEncodingException{
 		System.out.println("<BEFORE: " + input);
@@ -201,11 +198,9 @@ public class ProtocolHandler {
 		}
 
 		String result = URLDecoder.decode(input, "ASCII");
-
 		System.out.println("<AFTER: " +result);
 		return result;
 	}
-
 	//================================================================================
 	private String reLoadHTML(String counterMeasure){
 		String line;
@@ -224,7 +219,6 @@ public class ProtocolHandler {
 		} catch (IOException e) {e.printStackTrace();}
 		return "";
 	}
-	
 	//================================================================================
 	private String MXlookup(String potentialDNS){
 		String DNSserver = "";
@@ -237,15 +231,11 @@ public class ProtocolHandler {
 
 		try {
 			dircontext = new InitialDirContext(property);
-		} catch (NamingException e) {
-			e.printStackTrace();
-		}
+		} catch (NamingException e) {e.printStackTrace();}
 
 		try {
 			attributes = dircontext.getAttributes(potentialDNS, MXattributes);
-		} catch (NamingException e) {
-			e.printStackTrace();
-		}
+		} catch (NamingException e) {e.printStackTrace();}
 
 		Attribute attribute = attributes.get("MX");
 
@@ -267,7 +257,6 @@ public class ProtocolHandler {
 
 		if(emailForValidation.contains("@") == true){
 			String[] result = emailForValidation.split("@");
-
 			if(result[0] == null || result[1] == null){
 				System.out.println("<INVALID EMAIL "+ emailForValidation);
 				return false;
@@ -281,7 +270,6 @@ public class ProtocolHandler {
 		}
 		return valid;
 	}
-	
 	//================================================================================
 	public void sendAndGetResponse(String statement){
 		try {
@@ -292,7 +280,6 @@ public class ProtocolHandler {
 		try {
 			System.out.println("readline: " + is.readLine());
 		} catch (IOException e) {e.printStackTrace();}
-
 		// L€GG IN ERROR HANTERING OM EJ OK
 	}
 }
