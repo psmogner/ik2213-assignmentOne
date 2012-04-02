@@ -7,11 +7,10 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.Socket;
 import java.net.URLDecoder;
-import java.util.ArrayList;
-import java.util.Hashtable;
-
-import javax.naming.NamingEnumeration;
+import java.util.Properties;
+import javax.naming.Context;
 import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
@@ -72,11 +71,10 @@ public class ProtocolHandler {
 				if(validateEmail(from) == false || validateEmail(to) == false){
 					return "";
 				}
-				//--------------------------------------------------------------------------------
-				//				try {
-				//					MXlookup(to.split("@")[1]);
-				//				} catch (NamingException e) {e.printStackTrace();}
-				//--------------------------------------------------------------------------------
+				String potentialDNS = to.split("@")[1];
+				System.out.println("Vad som skickas in: "+ to.split("@")[1]);
+				MXlookup(to.split("@")[1]);
+
 				http_request_info.setMailFrom(from);
 				http_request_info.setMailTo(to);
 				http_request_info.setMailSubject(subject);
@@ -208,30 +206,40 @@ public class ProtocolHandler {
 		return result;
 	}
 
-	private ArrayList<?> MXlookup(String potentialDNS) throws NamingException{
+	private String MXlookup(String potentialDNS){
 		String DNSserver = "";
-		Hashtable<String, String> hashtable = new Hashtable<String, String>();
-		hashtable.put("java.naming.factory.initial", "com.sun.jndi.dns.DnsContextFactory");
-		DirContext dircontext = new InitialDirContext(hashtable);
-		Attributes attributes = dircontext.getAttributes(potentialDNS, new String[] {"MX"});
-		if( attributes == null) {
-			throw new NamingException
-			( "No match for name " + potentialDNS );
-		}else{
-			//...... Mer mer mer Œ mer!
-			NamingEnumeration en = attributes.getAll();
-			while(en.hasMore() != false){
-				String test = (String) en.next();
-				System.out.println("Vad Šr det?!?! =>"+ en.next());
-				String[] f = test.split(" ");
-				if(f[1].endsWith(".")){
-					f[1].substring(0, f[1].length()-1);
-				} else {
-					res
-				}
-			}
+		String attrbuteToString = "";
+		Attributes attributes = null;
+		String[] MXattributes = {"MX"};
+		InitialDirContext dircontext = null;
+		Properties property = new Properties();
+		property.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+
+		try {
+			dircontext = new InitialDirContext(property);
+		} catch (NamingException e) {
+			e.printStackTrace();
 		}
-		return null;
+
+		try {
+			attributes = dircontext.getAttributes(potentialDNS, MXattributes);
+		} catch (NamingException e) {
+			e.printStackTrace();
+		}
+
+		Attribute attribute = attributes.get("MX");
+
+		if(attribute != null) {
+			try{
+				attrbuteToString = (String) attribute.get(0);
+			} catch (NamingException ex) {
+				ex.printStackTrace();
+			}
+			String[] parts = attrbuteToString.split(" ");
+			DNSserver = parts[parts.length-1];
+			System.out.println("DNSserver lookup: " + DNSserver);
+		}
+		return DNSserver;
 	}
 
 	public Boolean validateEmail(String emailForValidation){
