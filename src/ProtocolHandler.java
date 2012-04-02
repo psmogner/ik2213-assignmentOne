@@ -10,11 +10,7 @@ import java.net.URLDecoder;
 import java.util.Properties;
 import javax.naming.Context;
 import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
-import javax.xml.soap.MimeHeaders;
+import javax.naming.directory.*;
 
 public class ProtocolHandler {
 	private String [] get_array;
@@ -67,9 +63,9 @@ public class ProtocolHandler {
 					e.printStackTrace();
 				}
 
-//				String potentialDNS = to.split("@")[1];
-//				System.out.println("Vad som skickas in: "+ to.split("@")[1]);
-//				MXlookup(to.split("@")[1]);
+				//	String potentialDNS = to.split("@")[1];
+				//	System.out.println("Vad som skickas in: "+ to.split("@")[1]);
+				//	MXlookup(to.split("@")[1]);
 
 				http_request_info.setMailFrom(from);
 				http_request_info.setMailTo(to);
@@ -98,12 +94,8 @@ public class ProtocolHandler {
 			System.out.println("OUTPUTHANDLER EQUALS POST");
 			//ESTABLISH/SETUP CONNECTION TO THE SMTP SERVER HERE... I GUESS?
 
-			//CHECKS IF THE EMAILS ARE VALID
-			if(validateEmail(http_request_info.getMailFrom()) == false || validateEmail(http_request_info.getMailTo()) == false){
-				reLoadHTML("Invalid mail address.");
-				return "";
-			}
-			
+
+
 			//MESSAGE TO THE SMTP SERVER
 			String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
 			String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
@@ -122,28 +114,30 @@ public class ProtocolHandler {
 			os = null;
 			is = null;
 
-			try {
-				smtpsocket = new Socket(ipAddress, 25);
-				System.out.println("Connected to SMTP");
-				os = new BufferedOutputStream(smtpsocket.getOutputStream());
-				is = new BufferedReader(new InputStreamReader(smtpsocket.getInputStream()));
+			//if(validateEmail(to) == true && validateEmail(to) == true){
+				try {
+					smtpsocket = new Socket(ipAddress, 25);
+					System.out.println("Connected to SMTP");
+					os = new BufferedOutputStream(smtpsocket.getOutputStream());
+					is = new BufferedReader(new InputStreamReader(smtpsocket.getInputStream()));
+					if(smtpsocket != null && os != null && is != null){
+						System.out.println("I ifsatsen");
 
-				if(smtpsocket != null && os != null && is != null){
-					System.out.println("I ifsatsen");
-
-					sendAndGetResponse(hello);
-					sendAndGetResponse(mail_from);
-					sendAndGetResponse(rcpt_to);
-					sendAndGetResponse(data);
-					sendAndGetResponse(subject + blank_line + mail_text + new_lines);
-					sendAndGetResponse(quit);	
-				
-				}			
-			} catch (IOException e) {
-				System.out.println("Could not connect to SMTP server");
-				reLoadHTML("Could not connect to the SMTP server");
-				e.printStackTrace();
-			}
+						sendAndGetResponse(hello);
+						sendAndGetResponse(mail_from);
+						sendAndGetResponse(rcpt_to);
+						sendAndGetResponse(data);
+						sendAndGetResponse(subject + blank_line + mail_text + new_lines);
+						sendAndGetResponse(quit);	
+					}			
+				} catch (IOException e) {
+					System.out.println("Could not connect to SMTP server");
+					reLoadHTML("Could not connect to the SMTP server");
+					e.printStackTrace();
+				}
+//			} else {
+//				reLoadHTML("Mail address invalid! Please try again.");
+//			}
 			// Now send the email off and check the server reply.  
 			// Was an OK is reached you are complete.
 			String responseline;
@@ -160,11 +154,11 @@ public class ProtocolHandler {
 				smtpsocket.close();
 			} catch (IOException e) {
 				System.out.println("Failed to close socket");
-				reLoadHTML("Failed to close socket.");
+				reLoadHTML("Failed to close socket connection to the SMTP sever.");
 				e.printStackTrace();
 			}	
 		}
-		
+
 		response = "HTTP/1.0 200 OK\r\n";
 		response += "Content-Type: text/html\r\n";
 		response += "Content-Length " + htmlfile.length() + "\r\n";
@@ -174,6 +168,8 @@ public class ProtocolHandler {
 		response += htmlfile;
 		return response;
 	}	
+
+	//================================================================================
 	//================================================================================
 	public String theDecoderWithSwe(String input) throws UnsupportedEncodingException{
 		System.out.println("<BEFORE: " + input);
@@ -205,7 +201,7 @@ public class ProtocolHandler {
 	private String reLoadHTML(String counterMeasure){
 		String line;
 		htmlfile = "";
-		
+
 		try {
 			input = new BufferedReader(new FileReader("index.html"));
 		} catch (FileNotFoundException e) {e.printStackTrace();}
@@ -252,30 +248,39 @@ public class ProtocolHandler {
 		return DNSserver;
 	}
 	//================================================================================
-	public Boolean validateEmail(String emailForValidation){
-		boolean valid = false;
-
+	public static Boolean email(String emailForValidation){
 		if(emailForValidation.contains("@") == true){
 			String[] result = emailForValidation.split("@");
-			if(result[0] == null || result[1] == null){
-				System.out.println("<INVALID EMAIL "+ emailForValidation);
-				return false;
-			}else if(result[1].contains(".") == false){
-				System.out.println("<INVALID EMAIL "+emailForValidation);
-				return false;
-			}else{
-				System.out.println("<VALID EMAIL "+emailForValidation);
-				valid = true;
+			System.out.println("FIRST");
+			if(result[0] != "" || result[1] != ""){
+				System.out.println("SECOND");
+				if(result[1].contains(".") == true){
+					System.out.println("THIRD");
+					String resultOne = result[1];
+					String[] resultTwo = resultOne.split(".");
+						System.out.println("resultTwo[0]: "+resultTwo[0]);
+						System.out.println("resultTwo[1]: "+resultTwo[1]);
+					if(resultTwo[0] != "" || resultTwo[1] != ""){
+						System.out.println("FOURTH");
+						System.out.println("Email "+emailForValidation+" is valid!!");
+						return true;
+					}
+				}
 			}
 		}
-		return valid;
+		System.out.println("Invalid mail address!");
+		return false;
 	}
+
 	//================================================================================
 	public void sendAndGetResponse(String statement){
 		try {
 			System.out.println("sendAndGetResponse: " + statement);
 			os.write(statement.getBytes());
 			os.flush();
+			if(statement.contains("QUIT")){
+				reLoadHTML("Mail was sent successfully!:D");
+			}
 		} catch (IOException e) {e.printStackTrace();}
 		try {
 			System.out.println("readline: " + is.readLine());
