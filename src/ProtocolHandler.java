@@ -14,6 +14,7 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
+import javax.xml.soap.MimeHeaders;
 
 public class ProtocolHandler {
 	private String [] get_array;
@@ -29,8 +30,7 @@ public class ProtocolHandler {
 	private BufferedReader is;
 	private BufferedOutputStream os;
 	private String ipAddress = "192.168.3.11";
-
-	boolean temp = false;
+	private boolean temp = false;
 
 	public ProtocolHandler(){
 		http_request_info = new HttpRequest();
@@ -69,11 +69,12 @@ public class ProtocolHandler {
 
 				//CHECKS IF THE EMAILS ARE VALID
 				if(validateEmail(from) == false || validateEmail(to) == false){
+					reLoadHTML("Invalid mail address!");
 					return "";
 				}
-				String potentialDNS = to.split("@")[1];
-				System.out.println("Vad som skickas in: "+ to.split("@")[1]);
-				MXlookup(to.split("@")[1]);
+//				String potentialDNS = to.split("@")[1];
+//				System.out.println("Vad som skickas in: "+ to.split("@")[1]);
+//				MXlookup(to.split("@")[1]);
 
 				http_request_info.setMailFrom(from);
 				http_request_info.setMailTo(to);
@@ -92,18 +93,11 @@ public class ProtocolHandler {
 		String response = "";
 		String SMTPresponse = "";
 		htmlfile = "";
-		String line;
 
 		if(http_request_info.getMethod_name().equals("GET")){
-			System.out.println("OUTPUTHANDLER EQUALS GET");
-			try {
-				input = new BufferedReader(new FileReader("index.html"));
-			} catch (FileNotFoundException e) {e.printStackTrace();}
-			try {
-				while((line = input.readLine()) != null){
-					htmlfile += line + "\r\n";
-				}
-			} catch (IOException e) {e.printStackTrace();}
+			//System.out.println("OUTPUTHANDLER EQUALS GET");
+
+			reLoadHTML("This gonna be blank later!");
 
 		}else if(http_request_info.getMethod_name().equals("POST")){
 			System.out.println("OUTPUTHANDLER EQUALS POST");
@@ -142,10 +136,12 @@ public class ProtocolHandler {
 					sendAndGetResponse(rcpt_to);
 					sendAndGetResponse(data);
 					sendAndGetResponse(subject + blank_line + mail_text + new_lines);
-					sendAndGetResponse(quit);						
+					sendAndGetResponse(quit);	
+				
 				}			
 			} catch (IOException e) {
 				System.out.println("Could not connect to SMTP server");
+				reLoadHTML("Could not connect to the SMTP server");
 				e.printStackTrace();
 			}
 			// Now send the email off and check the server reply.  
@@ -155,18 +151,21 @@ public class ProtocolHandler {
 
 				while((responseline = is.readLine())!=null) {  
 					System.out.println(responseline);
-					//					if(responseline.indexOf("Ok") != -1)
-					//						break;
+					//	if(responseline.indexOf("Ok") != -1)
+					//	break;
 				}
+				reLoadHTML("Mail successfully sent! :D");
 			} catch (IOException e) {e.printStackTrace();}
 
 			try {
 				smtpsocket.close();
 			} catch (IOException e) {
 				System.out.println("Failed to close socket");
+				reLoadHTML("Failed to close socket.");
 				e.printStackTrace();
 			}	
 		}
+		
 
 		response = "HTTP/1.0 200 OK\r\n";
 		response += "Content-Type: text/html\r\n";
@@ -175,10 +174,10 @@ public class ProtocolHandler {
 		response += "Connection: Close \r\n";
 		response += "\r\n";
 		response += htmlfile;
-		//System.out.println(response);
 		return response;
 	}	
-
+	
+	//================================================================================
 	public String theDecoderWithSwe(String input) throws UnsupportedEncodingException{
 		System.out.println("<BEFORE: " + input);
 
@@ -202,10 +201,31 @@ public class ProtocolHandler {
 		}
 
 		String result = URLDecoder.decode(input, "ASCII");
+
 		System.out.println("<AFTER: " +result);
 		return result;
 	}
 
+	//================================================================================
+	private String reLoadHTML(String counterMeasure){
+		String line;
+		htmlfile = "";
+		
+		try {
+			input = new BufferedReader(new FileReader("index.html"));
+		} catch (FileNotFoundException e) {e.printStackTrace();}
+		try {
+			while((line = input.readLine()) != null){
+				if(line.contains("</form>")){
+					line = "</form>\r\n<br><br><center><h2>"+counterMeasure+"</h2></center>";
+				}
+				htmlfile += line + "\r\n";
+			}
+		} catch (IOException e) {e.printStackTrace();}
+		return "";
+	}
+	
+	//================================================================================
 	private String MXlookup(String potentialDNS){
 		String DNSserver = "";
 		String attrbuteToString = "";
@@ -241,7 +261,7 @@ public class ProtocolHandler {
 		}
 		return DNSserver;
 	}
-
+	//================================================================================
 	public Boolean validateEmail(String emailForValidation){
 		boolean valid = false;
 
@@ -261,6 +281,8 @@ public class ProtocolHandler {
 		}
 		return valid;
 	}
+	
+	//================================================================================
 	public void sendAndGetResponse(String statement){
 		try {
 			System.out.println("sendAndGetResponse: " + statement);
