@@ -1,3 +1,4 @@
+//Class for the specific HTTP request with getters and setters that are necessary
 public class HttpRequest {
 	
 	private String method_name; 
