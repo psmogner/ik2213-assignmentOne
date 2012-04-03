@@ -28,7 +28,7 @@ public class ProtocolHandler {
 	private String ipAddress = "192.168.3.11";
 	private Pattern pattern;
 	private Matcher matcher;
-	
+
 	// The static final String EMAIL_PATTERN gives the possibility to type in an email 
 	// that can look like x@x.x to x.x@x.x.x 
 	private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
@@ -107,10 +107,11 @@ public class ProtocolHandler {
 		String response = "";
 		String SMTPresponse = "";
 		htmlfile = "";
-		smtpsocket = null;
 		String responseline;
 		os = null;
+		smtpsocket = null;
 		is = null;
+
 
 		// If the data handled in the inputHandler was and GET request
 		// this outputHandler-method checks for it and answer accordingly.
@@ -142,11 +143,14 @@ public class ProtocolHandler {
 			// for both sender and receiver are valid addresses through the 
 			// validateEmail method. If they are not, the data to the server are not
 			// sent and instead the client will get an error message.
-			if(validateEmail(from) == true && validateEmail(to) == true){
+			if(validateEmail(from) == true && validateEmail(to) == true && http_request_info.getMailSubject() != null){
+				
+				// Removing unusual characters from the subject. 
+				http_request_info.setMailSubject(http_request_info.getMailSubject().replaceAll("^\\p{L}\\p{N}]", ""));
 				try {
-
 					// Initializing necessary variables to make connection to the
 					// SMTP server.
+
 					smtpsocket = new Socket(ipAddress, 25);
 					System.out.println("Connected to SMTP");
 					os = new BufferedOutputStream(smtpsocket.getOutputStream());
@@ -287,14 +291,13 @@ public class ProtocolHandler {
 		return "";
 	}
 	//================================================================================
-	
+
 	// The validateEmail method validates the email of both the sender and receiver
 	// through pattern checking with a certain pattern string.
 	public Boolean validateEmail(String emailForValidation){
-		
+
 		// Initialize variable for handling if the email is valid or not.
 		Boolean valid = false;
-
 		// We start with compiling the regular expression in to a pattern.
 		// Further we match the incoming string with the given pattern in EMAIL_PATTERN.
 		pattern = Pattern.compile(EMAIL_PATTERN);
@@ -304,9 +307,9 @@ public class ProtocolHandler {
 		valid = matcher.matches();
 		return valid;
 	}
-	
+
 	//================================================================================
-	
+
 	// The sendAndGetResponse method is sending the SMTP message to the SMTP server
 	// and receives messages from that SMTP server. Based on the response from the 
 	// server we send the appropriate error message to the clients browser.
@@ -335,7 +338,7 @@ public class ProtocolHandler {
 					return;
 				}
 			} 
-			
+
 			// If the message do not contain 220, 250, 354 or 221 there is something
 			// wrong and we send the error message to the clients browser with an 
 			// apology and the encouragement to try again :D 
@@ -343,7 +346,7 @@ public class ProtocolHandler {
 				reLoadHTML("Sorry, "+response+". Please try again!");
 			} 
 		} 
-		
+
 		// If we can not read the response from the SMTP server we send the error message to
 		// the clients browser.
 		catch (IOException e) {
