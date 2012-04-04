@@ -5,10 +5,21 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URLDecoder;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.naming.NamingException;
+import javax.naming.directory.Attributes;
+import javax.naming.directory.DirContext;
+import javax.naming.directory.InitialDirContext;
+
+import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
+import com.sun.tools.javac.code.Attribute;
 
 public class ProtocolHandler {
 
@@ -128,87 +139,119 @@ public class ProtocolHandler {
 
 			// The variables stored in the inputHandler method are here used to
 			// create a SMTP message that later is going to be sent to the SMTP server.
-			String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
-			String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
-			String rcpt_to = "RCPT TO: <" + http_request_info.getMailTo()+">\r\n";
-			String data = "DATA\r\n";
-			String mime = "MIME-Version: 1.0" + "\r\n";
-			String contenttype = "Content-type: text/plain; charset=ISO-8859-1"+ "\r\n";
-			String transfer_encoding= "Content-Transfer-Encoding: quoted-printable"+ "\r\n";
-			String subject = "Subject: =?iso-8859-1?Q?"+ http_request_info.getMailSubject()+"?=\r\n\r\n";
-			String mail_text = http_request_info.getMailText() + "\r\n";
-			String blank_line = "\r\n";
-			String new_lines = ".\r\n";
-			String quit = "QUIT\r\n";
-			System.out.println(SMTPresponse);
-			
-			
 
-			// Before sending data to the SMTP server we have to check if the email
-			// for both sender and receiver are valid addresses through the 
-			// validateEmail method. If they are not, the data to the server are not
-			// sent and instead the client will get an error message.
-			if(validateEmail(from) == true && validateEmail(to) == true && http_request_info.getMailSubject() != null){
-				
-				// Removing unusual characters from the subject. 
-				http_request_info.setMailSubject(http_request_info.getMailSubject().replaceAll("^\\p{L}\\p{N}]", ""));
-				try {
-					// Initializing necessary variables to make connection to the
-					// SMTP server.
+			String ipAdr = null;
+			try {
+				ipAdr = callNsLookup(http_request_info.getMailTo());
+				System.out.println("IP ADRESS" + ipAdr);
+				ipAdr = InetAddress.getByName(ipAdr).getHostAddress();
+			} catch (UnknownHostException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 
-					smtpsocket = new Socket(ipAddress, 25);
-					System.out.println("Connected to SMTP");
-					os = new BufferedOutputStream(smtpsocket.getOutputStream());
-					is = new BufferedReader(new InputStreamReader(smtpsocket.getInputStream()));
 
-					// For prevention of errors we first check so the socket, reader
-					// and writer is not empty/null.
-					if(smtpsocket != null && os != null && is != null){
+			String mailserver = callNsLookup(http_request_info.getMailTo());
+			if(mailserver == null){
+				reLoadHTML("Error when doing NsLookup");
+			}
+			else{
 
-						// For each line that was stored earlier to be sent to the SMTP
-						// server they are here sent to the sendAndGetResponse method
-						// that does that and handles eventual errors that can occur.
-						sendAndGetResponse(hello);
-						sendAndGetResponse(mail_from);
-						sendAndGetResponse(rcpt_to);
-						sendAndGetResponse(data);
-						sendAndGetResponse(mime + contenttype + transfer_encoding + subject + blank_line + mail_text + new_lines);
-						sendAndGetResponse(quit);
-					}			
-				} 
+				String hello = "HELO " + callNsLookup(http_request_info.getMailFrom()) + "\r\n";
 
-				// If we can not establish a connection to the SMTP server
-				// the client gets an error message as an answer.
-				catch (IOException e) {
-					reLoadHTML("Could not connect to the SMTP server");
-					e.printStackTrace();
-				}
+				//				String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
+				String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
+				String rcpt_to = "RCPT TO: <" + http_request_info.getMailTo()+">\r\n";
+				String data = "DATA\r\n";
+				String mime = "MIME-Version: 1.0" + "\r\n";
+				String contenttype = "Content-type: text/plain; charset=ISO-8859-1"+ "\r\n";
+				String transfer_encoding= "Content-Transfer-Encoding: quoted-printable"+ "\r\n";
+				String subject = "Subject: =?iso-8859-1?Q?"+ http_request_info.getMailSubject()+"?=\r\n\r\n";
+				String mail_text = http_request_info.getMailText() + "\r\n";
+				String blank_line = "\r\n";
+				String new_lines = ".\r\n";
+				String quit = "QUIT\r\n";
+				System.out.println(SMTPresponse);
 
-				// ?????????????????????????????????????  
-				// ?????????????????????????????????????
-				try {
-					while((responseline = is.readLine())!=null) {  
-						System.out.println(responseline);
+
+
+				// Before sending data to the SMTP server we have to check if the email
+				// for both sender and receiver are valid addresses through the 
+				// validateEmail method. If they are not, the data to the server are not
+				// sent and instead the client will get an error message.
+				if(validateEmail(from) == true && validateEmail(to) == true && http_request_info.getMailSubject() != null){
+
+					// Removing unusual characters from the subject. 
+					http_request_info.setMailSubject(http_request_info.getMailSubject().replaceAll("^\\p{L}\\p{N}]", ""));
+					try {
+						// Initializing necessary variables to make connection to the
+						// SMTP server.
+
+
+
+						smtpsocket = new Socket(ipAddress, 25);
+						System.out.println("Connected to SMTP");
+						os = new BufferedOutputStream(smtpsocket.getOutputStream());
+						is = new BufferedReader(new InputStreamReader(smtpsocket.getInputStream()));
+
+						// For prevention of errors we first check so the socket, reader
+						// and writer is not empty/null.
+						if(smtpsocket != null && os != null && is != null){
+
+							// For each line that was stored earlier to be sent to the SMTP
+							// server they are here sent to the sendAndGetResponse method
+							// that does that and handles eventual errors that can occur.
+							String server_ready =  is.readLine();
+							if(server_ready.contains("220") == true){
+								sendAndGetResponse(hello);
+								sendAndGetResponse(mail_from);
+								sendAndGetResponse(rcpt_to);
+								sendAndGetResponse(data);
+								sendAndGetResponse(mime + contenttype + transfer_encoding + subject + blank_line + mail_text + new_lines);
+								sendAndGetResponse(quit);
+							}
+							else{
+								//If server is not ready
+								reLoadHTML("Server is not ready");
+							}
+
+						}			
+					} 
+
+					// If we can not establish a connection to the SMTP server
+					// the client gets an error message as an answer.
+					catch (IOException e) {
+						reLoadHTML("Could not connect to the SMTP server");
+						e.printStackTrace();
 					}
-				} catch (IOException e) {e.printStackTrace();}
 
-				// We try to close the socket connection
-				// and if it does not succeed we send an
-				// error message back to the client.
-				try {
-					smtpsocket.close();
-				} catch (IOException e) {
-					reLoadHTML("Failed to close socket connection to the SMTP server.");
-					e.printStackTrace();
+					// ?????????????????????????????????????  
+					// ?????????????????????????????????????
+					try {
+						while((responseline = is.readLine())!=null) {  
+							System.out.println(responseline);
+						}
+					} catch (IOException e) {e.printStackTrace();}
+
+					// We try to close the socket connection
+					// and if it does not succeed we send an
+					// error message back to the client.
+					try {
+						smtpsocket.close();
+					} catch (IOException e) {
+						reLoadHTML("Failed to close socket connection to the SMTP server.");
+						e.printStackTrace();
+					}
 				}
-			}
 
-			// This is where we end up if one of the email addresses 
-			// are invalid and we answer the client with a message.
-			else {
-				reLoadHTML("Mail address invalid! Please try again.");
-			}
-		} 
+				// This is where we end up if one of the email addresses 
+				// are invalid and we answer the client with a message.
+				else {
+					reLoadHTML("Mail address invalid! Please try again.");
+				}
+			} 
+
+		}
 
 		// This is the last stage of the outputHandler where we summarize all the data
 		// that is going to be sent back to the client in one single String and last we
@@ -230,12 +273,15 @@ public class ProtocolHandler {
 		String [] dnsAdr = adr.split("@");
 		System.out.println(dnsAdr[1]);
 
-		//NSlookup ns = new NSlookup();
-		//String result = ns.mxLookup(dnsAdr[1]);
-		//System.out.println(result);
-		//return result;
-		return "hej";
+		NSlookup ns = new NSlookup();
+		String result = ns.mxLookup(dnsAdr[1]);
+		//		String result = ns.mxLookup("gmail.com");
+		System.out.println(result);
+		return result;
 	}
+
+	
+
 	//================================================================================
 
 	// The theDecoderWithSwe method decodes the message from HTML to ASCII so 
