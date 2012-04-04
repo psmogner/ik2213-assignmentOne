@@ -12,14 +12,10 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-
-import com.sun.org.apache.xalan.internal.xsltc.runtime.Hashtable;
-import com.sun.tools.javac.code.Attribute;
 
 public class ProtocolHandler {
 
@@ -140,26 +136,24 @@ public class ProtocolHandler {
 			// The variables stored in the inputHandler method are here used to
 			// create a SMTP message that later is going to be sent to the SMTP server.
 
-			String ipAdr = null;
+			InetAddress ipAdr = null;
 			try {
-				ipAdr = callNsLookup(http_request_info.getMailTo());
+				ipAdr = InetAddress.getByName(callNsLookup(http_request_info.getMailTo()));
 				System.out.println("IP ADRESS" + ipAdr);
-				ipAdr = InetAddress.getByName(ipAdr).getHostAddress();
 			} catch (UnknownHostException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 
 
-			String mailserver = callNsLookup(http_request_info.getMailTo());
-			if(mailserver == null){
-				reLoadHTML("Error when doing NsLookup");
-			}
-			else{
+//			String mailserver = callNsLookup(http_request_info.getMailTo());
+//			if(mailserver == null){
+//				reLoadHTML("Error when doing NsLookup");
+//			}
+//			else{
 
 				String hello = "HELO " + callNsLookup(http_request_info.getMailFrom()) + "\r\n";
 
-				//				String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
+				//String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
 				String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
 				String rcpt_to = "RCPT TO: <" + http_request_info.getMailTo()+">\r\n";
 				String data = "DATA\r\n";
@@ -173,8 +167,6 @@ public class ProtocolHandler {
 				String quit = "QUIT\r\n";
 				System.out.println(SMTPresponse);
 
-
-
 				// Before sending data to the SMTP server we have to check if the email
 				// for both sender and receiver are valid addresses through the 
 				// validateEmail method. If they are not, the data to the server are not
@@ -186,10 +178,9 @@ public class ProtocolHandler {
 					try {
 						// Initializing necessary variables to make connection to the
 						// SMTP server.
-
-
-
+						
 						smtpsocket = new Socket(ipAddress, 25);
+						//smtpsocket = new Socket(callNsLookup(http_request_info.getMailTo()), 25);
 						System.out.println("Connected to SMTP");
 						os = new BufferedOutputStream(smtpsocket.getOutputStream());
 						is = new BufferedReader(new InputStreamReader(smtpsocket.getInputStream()));
@@ -249,7 +240,7 @@ public class ProtocolHandler {
 				else {
 					reLoadHTML("Mail address invalid! Please try again.");
 				}
-			} 
+//			} 
 
 		}
 
@@ -269,13 +260,15 @@ public class ProtocolHandler {
 
 	// ????????????????????????????????????? 
 	public String callNsLookup(String adr){
-
-		String [] dnsAdr = adr.split("@");
-		System.out.println(dnsAdr[1]);
+		String result = null;
+		
+		String [] getDNSAddress = adr.split("@");
+		System.out.println(getDNSAddress[1]);
 
 		NSlookup ns = new NSlookup();
-		String result = ns.mxLookup(dnsAdr[1]);
-		//		String result = ns.mxLookup("gmail.com");
+	
+		result = ns.mxLookup(getDNSAddress[1]);
+		// String result = ns.mxLookup("gmail.com");
 		System.out.println(result);
 		return result;
 	}
