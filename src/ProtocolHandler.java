@@ -132,17 +132,16 @@ public class ProtocolHandler {
 			String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
 			String rcpt_to = "RCPT TO: <" + http_request_info.getMailTo()+">\r\n";
 			String data = "DATA\r\n";
-			String subject = "Subject: "+ http_request_info.getMailSubject()+"\r\n";
-	//		String mail_text = http_request_info.getMailText() + "\r\n";
-			String mail_text = "(=?ISO-8859-1?Q?a?=)" + "\r\n";
+			String mime = "MIME-Version: 1.0" + "\r\n";
+			String contenttype = "Content-type: text/plain; charset=ISO-8859-1"+ "\r\n";
+			String transfer_encoding= "Content-Transfer-Encoding: quoted-printable"+ "\r\n";
+			String subject = "Subject: =?iso-8859-1?Q?"+ http_request_info.getMailSubject()+"?=\r\n\r\n";
+			String mail_text = http_request_info.getMailText() + "\r\n";
 			String blank_line = "\r\n";
 			String new_lines = ".\r\n";
 			String quit = "QUIT\r\n";
 			System.out.println(SMTPresponse);
 			
-			
-			String mime = "MIME-Version: 1.0" + "\r\n";
-			String test = "Content-type: text/plain; charset=ISO-8859-1"+ "\r\n";
 			
 
 			// Before sending data to the SMTP server we have to check if the email
@@ -173,7 +172,7 @@ public class ProtocolHandler {
 						sendAndGetResponse(mail_from);
 						sendAndGetResponse(rcpt_to);
 						sendAndGetResponse(data);
-						sendAndGetResponse(subject + blank_line + mime + test + mail_text + new_lines);
+						sendAndGetResponse(mime + contenttype + transfer_encoding + subject + blank_line + mail_text + new_lines);
 						sendAndGetResponse(quit);
 					}			
 				} 
