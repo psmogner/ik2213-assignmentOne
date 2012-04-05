@@ -1,28 +1,25 @@
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.*;
 
+// To change this template, choose Tools | Templates
+// and open the template in the editor.
 
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-
-public class NSlookup 
-{
-	Properties environment = new Properties(); /* Create a hashtable of properties*/ 
+public class NSlookup {
+	// Creating an empty list of properties.
+	Properties environment = new Properties(); 
 	InitialDirContext idc;
 
-	public NSlookup(){
+	public NSlookup(){ 
 		environment.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");		
 		try {
-			idc = new InitialDirContext(environment); /* Start directory operation*/
+			
+			// Starting the directory operation.
+			idc = new InitialDirContext(environment); 
 		} catch (NamingException ne) {
-			System.out.println("Error in nameserver lookup init " + ne);
+			System.out.println("Error in nameserver lookup initiation " + ne);
+			return;
 		}
 	}
 
@@ -34,41 +31,32 @@ public class NSlookup
 		String mxAttr = "";
 
 		try {
-			attrs = idc.getAttributes(domain, mxAttributes); /* retreieve the mxAttributes */
-		}
-		catch (NamingException ex) {
-			System.out.println("Error in nameserver lookup get attributes " + ex);
+			
+			// Retrieving the attributes associated with the object
+			attrs = idc.getAttributes(domain, mxAttributes); 
+		} catch (NamingException ex) {
+			System.out.println("Error in nameserver lookup while getting attributes " + ex);
 			return null;
 		}
 
-		Attribute attr = attrs.get("MX"); /* Get the MX attribute */ 
+		// Getting the mx attributes from the retrieved attributes
+		Attribute attr = attrs.get("MX");  
 
+		// Checking if there are any MX servers and  
+		// taking out the first one.   
 		if (attr != null) {   
-			
-			System.out.println("Attr: " + attr);
 			try {
 				mxAttr = (String) attr.get(0);
-//				System.out.println(mxAttr);
 			} 
 			catch (NamingException ne) {
-//				Logger.getLogger(NSlookup.class.getName()).log(Level.SEVERE, null, ne);
 				System.out.println("Error in nameserver lookup" + ne);
+				return null;
 			}
 
-			String[] parts = mxAttr.split(" ");
-			System.out.println(parts.length);
-			if(parts.length > 0){
-				int i = 0;
-				while(i < parts.length){
-					System.out.println("Parts + " + parts[i]);
-					i++;
-				}
-			}
-			serverResult = parts[parts.length - 1];
+			// We split the taken MX server and split it to further 
+			String[] serverName = mxAttr.split(" ");
+			serverResult = serverName[serverName.length - 1];
 		}
-
 		return serverResult;
 	}
-
-
 }
