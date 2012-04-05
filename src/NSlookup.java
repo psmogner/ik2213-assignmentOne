@@ -27,6 +27,7 @@ public class NSlookup
 	}
 
 	public String mxLookup(String domain){
+		System.out.println("Domain in: "+domain);
 		String serverResult = "";
 		Attributes attrs = null;
 		String[] mxAttributes = {"MX"};
@@ -63,8 +64,6 @@ public class NSlookup
 					i++;
 				}
 			}
-			
-			
 			serverResult = parts[parts.length - 1];
 		}
 

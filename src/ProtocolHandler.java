@@ -5,17 +5,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URLDecoder;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.naming.NamingException;
-import javax.naming.directory.Attributes;
-import javax.naming.directory.DirContext;
-import javax.naming.directory.InitialDirContext;
 
 public class ProtocolHandler {
 
@@ -27,19 +20,16 @@ public class ProtocolHandler {
 	private String to = null;
 	private String from = null;
 	private String subject = null;
-	private String smtp = null;
-	private String text = null;
+	private String body = null;
 	private Socket smtpsocket;
 	private BufferedReader is;
 	private BufferedOutputStream os;
-	private String ipAddress = "192.168.3.11";
 	private Pattern pattern;
 	private Matcher matcher;
 
 	// The static final String EMAIL_PATTERN gives the possibility to type in an email 
 	// that can look like x@x.x to x.x@x.x.x 
 	private static final String EMAIL_PATTERN = "^[_A-Za-z0-9-]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
-	private boolean temp = false;
 
 	public ProtocolHandler(){
 		http_request_info = new HttpRequest();
@@ -47,7 +37,7 @@ public class ProtocolHandler {
 
 	// The inputHandler method takes care of the incoming requests from the client browsers and 
 	// stores necessary data from the request.
-	public String inputHandler(String inputString){
+	public String inputHandler(String inputString) throws UnsupportedEncodingException{
 
 		// First we check if the string is null since there can be empty data sent. 
 		// At least with Google Chrome since it preloads data while typing in the address.
@@ -62,7 +52,6 @@ public class ProtocolHandler {
 				http_request_info.setMethod_name(get_array[0]);
 				http_request_info.setLocal_path(get_array[1]);
 				http_request_info.setProtocol_version(get_array[2]);
-				temp = true;
 
 			}else if(inputString.startsWith("POST")){
 				System.out.println("IS A POST");
@@ -78,11 +67,11 @@ public class ProtocolHandler {
 			else if(inputString.startsWith("from=")){
 				String[] message = inputString.split("&");
 				try {
-					from = theDecoderWithSwe(message[0].split("=")[1], false);
-					to = theDecoderWithSwe(message[1].split("=")[1], false);
-					subject = theDecoderWithSwe(message[2].split("=")[1], false);
-					smtp = theDecoderWithSwe(message[3].split("=")[1], false);
-					text = theDecoderWithSwe(message[4].split("=")[1], true);
+					from = theDecoder(message[0].split("=")[1], true, false, false);
+					to = theDecoder(message[1].split("=")[1], true, false, false);
+					subject = theDecoder(message[2].split("=")[1], false, true, false);
+					body = theDecoder(message[3].split("=")[1], false, false, true);
+					System.out.println("body is: "+ body);
 				} catch (UnsupportedEncodingException e) {
 					e.printStackTrace();
 				}
@@ -93,8 +82,7 @@ public class ProtocolHandler {
 				http_request_info.setMailFrom(from);
 				http_request_info.setMailTo(to);
 				http_request_info.setMailSubject(subject);
-				http_request_info.setMailSMTP(smtp);
-				http_request_info.setMailText(text);
+				http_request_info.setMailText(body);
 			}
 		}
 		// Doing nothing.
@@ -112,13 +100,11 @@ public class ProtocolHandler {
 
 		//Initializing  variables and resetting them
 		String response = "";
-		String SMTPresponse = "";
 		htmlfile = "";
 		String responseline;
 		os = null;
 		smtpsocket = null;
 		is = null;
-
 
 		// If the data handled in the inputHandler was and GET request
 		// this outputHandler-method checks for it and answer accordingly.
@@ -135,36 +121,18 @@ public class ProtocolHandler {
 
 			// The variables stored in the inputHandler method are here used to
 			// create a SMTP message that later is going to be sent to the SMTP server.
-
-			InetAddress ipAdr = null;
-			try {
-				ipAdr = InetAddress.getByName(callNsLookup(http_request_info.getMailTo()));
-				System.out.println("IP ADRESS" + ipAdr);
-			} catch (UnknownHostException e1) {
-				e1.printStackTrace();
-			}
-
-
-			//			String mailserver = callNsLookup(http_request_info.getMailTo());
-			//			if(mailserver == null){
-			//				reLoadHTML("Error when doing NsLookup");
-			//			}
-			//			else{
-
 			String hello = "HELO " + callNsLookup(http_request_info.getMailFrom()) + "\r\n";
-			//String hello = "HELO "+http_request_info.getMailSMTP()+"\r\n";
 			String mail_from = "MAIL FROM: <"+http_request_info.getMailFrom()+">\r\n";			
 			String rcpt_to = "RCPT TO: <" + http_request_info.getMailTo()+">\r\n";
 			String data = "DATA\r\n";
 			String mime = "MIME-Version: 1.0" + "\r\n";
 			String contenttype = "Content-type: text/plain; charset=ISO-8859-1"+ "\r\n";
 			String transfer_encoding= "Content-Transfer-Encoding: quoted-printable"+ "\r\n";
-			String subject = "Subject: =?iso-8859-1?Q?"+ http_request_info.getMailSubject()+"?=\r\n\r\n";
+			String subject = "Subject: "+ http_request_info.getMailSubject()+"?=\r\n\r\n";
 			String mail_text = http_request_info.getMailText() + "\r\n";
 			String blank_line = "\r\n";
 			String new_lines = ".\r\n";
 			String quit = "QUIT\r\n";
-			System.out.println(SMTPresponse);
 
 			// Before sending data to the SMTP server we have to check if the email
 			// for both sender and receiver are valid addresses through the 
@@ -177,10 +145,9 @@ public class ProtocolHandler {
 				try {
 					// Initializing necessary variables to make connection to the
 					// SMTP server.
-
-					smtpsocket = new Socket(ipAddress, 25);
-					//smtpsocket = new Socket(callNsLookup(http_request_info.getMailTo()), 25);
-					System.out.println("Connected to SMTP");
+					String DNSserver = callNsLookup(http_request_info.getMailTo());
+					smtpsocket = new Socket(DNSserver, 25);
+					System.out.println("<CONNECTED TO SMTP>");
 					os = new BufferedOutputStream(smtpsocket.getOutputStream());
 					is = new BufferedReader(new InputStreamReader(smtpsocket.getInputStream()));
 
@@ -204,7 +171,6 @@ public class ProtocolHandler {
 							//If server is not ready
 							reLoadHTML("Server is not ready");
 						}
-
 					}			
 				} 
 
@@ -239,8 +205,6 @@ public class ProtocolHandler {
 			else {
 				reLoadHTML("Mail address invalid! Please try again.");
 			}
-			//			} 
-
 		}
 
 		// This is the last stage of the outputHandler where we summarize all the data
@@ -266,46 +230,68 @@ public class ProtocolHandler {
 
 		// Creating a new instance of NSlookup
 		NSlookup ns = new NSlookup();
-		// 
+		// We do a mx lookup 
 		result = ns.mxLookup(getDNSAddress[1]);
 		// String result = ns.mxLookup("gmail.com");
 		System.out.println(result);
 		return result;
 	}
 
-
-
 	//================================================================================
 
 	// The theDecoderWithSwe method decodes the message from HTML to ASCII so 
 	// space do not become + and so on.
-	public String theDecoderWithSwe(String input, boolean eMailBody) throws UnsupportedEncodingException{
+	public String theDecoder(String input, boolean eMailMail, boolean eMailSubject, boolean eMailBody) throws UnsupportedEncodingException{
 		System.out.println("<BEFORE: " + input);
-		if(input.contains("%E4")==true) {
-			input = input.replace("%E4", "=E4");
-		}
-		if(input.contains("%E5") == true){
-			input = input.replace("%E5", "=E5");			
-		}
-		if(input.contains("%F6") == true){
-			input = input.replace("%F6", "=F6");
-		}
-		if(input.contains("%C4")==true) {
-			input = input.replace("%C4", "=C4");
-		}
-		if(input.contains("%C5") == true){
-			input = input.replace("%C5", "=C5");			
-		}
-		if(input.contains("%D6") == true){
-			input = input.replace("%D6", "=D6");
+		String result = null;
+
+		if(eMailSubject == true){
+			input = input.replace("+", " ");
+			if(input != null){
+				input = input.replace("%28", "=?ISO-8859-1?Q?=28?=");
+				input = input.replace("%29", "=?ISO-8859-1?Q?=29?=");
+				input = input.replace("%3F", "=?ISO-8859-1?Q?=3F?=");
+				input = input.replace("%C4", "=?ISO-8859-1?Q?=C4?=");
+				input = input.replace("%C5", "=?ISO-8859-1?Q?=C5?=");
+				input = input.replace("%E4", "=?ISO-8859-1?Q?=E4?=");
+				input = input.replace("%E5", "=?ISO-8859-1?Q?=E5?=");
+				input = input.replace("%F6", "=?ISO-8859-1?Q?=F6?=");
+				input = input.replace("%D6", "=?ISO-8859-1?Q?=D6?=");
+
+				result = URLDecoder.decode(input.substring(0, input.length()-2 ), "ISO-8859-1");
+			} else{
+				input = "No email subject";
+			}
+		}  
+		if(eMailMail == true){
+			result = URLDecoder.decode(input, "ISO-8859-1");
 		}
 		if(eMailBody == true){
-			if(input.contains(".") == true){
-				input = input.replace(".","=2E");
+			if(input != null){
+//				if(input.contains("%28") == true) {
+//					input = input.replace("%28", "=28");
+//				}
+//				if(input.contains("%29") == true){
+//					input = input.replace("%29", "=29");			
+//				}
+				if(input.contains("%3F") == true){
+					input = input.replace("%3F", "=F6");
+				}
+				if(input.contains("=") == true){
+					input = input.replace("=", "=3D");
+				}
+				if(input.contains("%") == true){
+					input = input.replace("%", "=");
+				}
+				result = URLDecoder.decode(input, "ISO-8859-1");
+			} else {
+				input = "No email body";
 			}
-		}
+		} 
+
+		eMailMail = false;
+		eMailSubject = false;
 		eMailBody = false;
-		String result = URLDecoder.decode(input, "ISO-8859-1");
 		System.out.println("<AFTER: " +result);
 		return result;
 	}
