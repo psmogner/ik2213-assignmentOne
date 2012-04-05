@@ -1,6 +1,9 @@
 //Class for the specific HTTP request with getters and setters that are necessary
 public class HttpRequest {
 	
+	
+	// Class for temporary storing information about the email to be sent
+	
 	private String method_name; 
 	private String local_path; 
 	private String protocol_version; 

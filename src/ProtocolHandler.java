@@ -35,7 +35,7 @@ public class ProtocolHandler {
 		http_request_info = new HttpRequest();
 	}
 
-	// The inputHandler method takes care of the incoming requests from the client browsers and 
+	// The inputHandler method takes care of the incoming requests from the client browsers and picks out and
 	// stores necessary data from the request.
 	public String inputHandler(String inputString) throws UnsupportedEncodingException{
 
@@ -63,10 +63,12 @@ public class ProtocolHandler {
 
 			// If the message contains data that the client have written we need to 
 			// split up the message since it appears in a single string and store the
-			// variables accordingly.
+			// variables accordingly. 
 			else if(inputString.startsWith("from=")){
 				String[] message = inputString.split("&");
 				try {
+					// the parameters (true & false) are to seperate 3 different cases
+					// whether the string is belonging to the mail, subject, textbody
 					from = theDecoder(message[0].split("=")[1], true, false, false);
 					to = theDecoder(message[1].split("=")[1], true, false, false);
 					subject = theDecoder(message[2].split("=")[1], false, true, false);
@@ -166,8 +168,7 @@ public class ProtocolHandler {
 							sendAndGetResponse(data);
 							sendAndGetResponse(mime + contenttype + transfer_encoding + subject + blank_line + mail_text + new_lines);
 							sendAndGetResponse(quit);
-						}
-						else{
+						}else{
 							//If server is not ready
 							reLoadHTML("Server is not ready");
 						}
@@ -180,9 +181,6 @@ public class ProtocolHandler {
 					reLoadHTML("Could not connect to the SMTP server");
 					e.printStackTrace();
 				}
-
-				// ?????????????????????????????????????  
-				// ?????????????????????????????????????
 				try {
 					while((responseline = is.readLine())!=null) {  
 						System.out.println(responseline);
@@ -221,10 +219,11 @@ public class ProtocolHandler {
 	}	
 	//================================================================================
 
-	// ????????????????????????????????????? 
+	// Perform a lookup on an address
 	public String callNsLookup(String adr){
 		String result = null;
 
+		// get the second part of the email adress (after the @)
 		String [] getDNSAddress = adr.split("@");
 		System.out.println(getDNSAddress[1]);
 
@@ -232,7 +231,6 @@ public class ProtocolHandler {
 		NSlookup ns = new NSlookup();
 		// We do a mx lookup 
 		result = ns.mxLookup(getDNSAddress[1]);
-		// String result = ns.mxLookup("gmail.com");
 		System.out.println(result);
 		return result;
 	}
@@ -245,18 +243,20 @@ public class ProtocolHandler {
 		System.out.println("<BEFORE: " + input);
 		String result = null;
 
+		// If we want to decode the subject of the mail
 		if(eMailSubject == true){
 			input = input.replace("+", " ");
 			if(input != null){
-				input = input.replace("%28", "=?ISO-8859-1?Q?=28?=");
-				input = input.replace("%29", "=?ISO-8859-1?Q?=29?=");
-				input = input.replace("%3F", "=?ISO-8859-1?Q?=3F?=");
-				input = input.replace("%C4", "=?ISO-8859-1?Q?=C4?=");
-				input = input.replace("%C5", "=?ISO-8859-1?Q?=C5?=");
-				input = input.replace("%E4", "=?ISO-8859-1?Q?=E4?=");
-				input = input.replace("%E5", "=?ISO-8859-1?Q?=E5?=");
-				input = input.replace("%F6", "=?ISO-8859-1?Q?=F6?=");
-				input = input.replace("%D6", "=?ISO-8859-1?Q?=D6?=");
+				// Encode
+				input = input.replace("%28", "=?ISO-8859-1?Q?=28?=");//(
+				input = input.replace("%29", "=?ISO-8859-1?Q?=29?=");//)
+				input = input.replace("%3F", "=?ISO-8859-1?Q?=3F?=");//?
+				input = input.replace("%C4", "=?ISO-8859-1?Q?=C4?=");//
+				input = input.replace("%C5", "=?ISO-8859-1?Q?=C5?=");//€
+				input = input.replace("%E4", "=?ISO-8859-1?Q?=E4?=");//Œ
+				input = input.replace("%E5", "=?ISO-8859-1?Q?=E5?=");//Š
+				input = input.replace("%F6", "=?ISO-8859-1?Q?=F6?=");//…
+				input = input.replace("%D6", "=?ISO-8859-1?Q?=D6?=");//š
 
 				result = URLDecoder.decode(input.substring(0, input.length()-2 ), "ISO-8859-1");
 			} else{
@@ -266,19 +266,14 @@ public class ProtocolHandler {
 		if(eMailMail == true){
 			result = URLDecoder.decode(input, "ISO-8859-1");
 		}
+		// Decode body of the mail
 		if(eMailBody == true){
 			if(input != null){
-//				if(input.contains("%28") == true) {
-//					input = input.replace("%28", "=28");
-//				}
-//				if(input.contains("%29") == true){
-//					input = input.replace("%29", "=29");			
-//				}
 				if(input.contains("%3F") == true){
-					input = input.replace("%3F", "=F6");
+					input = input.replace("%3F", "=3F");//š
 				}
 				if(input.contains("=") == true){
-					input = input.replace("=", "=3D");
+					input = input.replace("=", "=3D");//=
 				}
 				if(input.contains("%") == true){
 					input = input.replace("%", "=");
@@ -293,6 +288,7 @@ public class ProtocolHandler {
 		eMailSubject = false;
 		eMailBody = false;
 		System.out.println("<AFTER: " +result);
+		// return decoded mail
 		return result;
 	}
 	//================================================================================
